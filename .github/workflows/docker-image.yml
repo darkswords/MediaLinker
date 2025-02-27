@@ -43,12 +43,14 @@ jobs:
       - name: Build and Push Docker image
         run: |
           # 获取当前时间年月日时分，作为自定义标签
-          IMAGE_TAG="latest-$(date +'%Y%m%d%H%M')"
+          TIME_TAG="$(date +'%Y%m%d%H%M')"
+          # 基本镜像名称
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/medialinker"
 
-          # 构建并推送镜像
+          # 构建并推送镜像，同时为所有架构使用相同标签
           docker buildx build --platform linux/${{ matrix.architecture }} \
-            -t ${{ secrets.DOCKER_USERNAME }}/medialinker:${IMAGE_TAG} \
-            -t ${{ secrets.DOCKER_USERNAME }}/medialinker:latest \
+            -t $IMAGE_NAME:${TIME_TAG} \
+            -t $IMAGE_NAME:latest \
             --push .
 
       - name: Check for repository updates
