@@ -54,8 +54,12 @@ jobs:
       - name: Check for repository updates
         run: |
           git fetch --tags
-          git diff --name-only HEAD HEAD~1
-          # 仅当有更新时才进行构建
+          # 确保有足够的提交历史才能比较差异
+          if git rev-parse HEAD~1 >/dev/null 2>&1; then
+            git diff --name-only HEAD HEAD~1
+          else
+            echo "No previous commit to compare."
+          fi
 
       - name: Trigger new build on update
         if: github.event.head_commit.message != 'Merge pull request' && github.event.head_commit.message != 'Automated build'
