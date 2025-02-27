@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        architecture: [x86_64, arm64]  # 构建两个架构的镜像
+        architecture: [amd64, arm64]  # 构建两个架构的镜像
 
     steps:
       - name: Checkout repository
@@ -47,8 +47,8 @@ jobs:
           # 基本镜像名称
           IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/medialinker"
 
-          # 构建并推送镜像，同时为所有架构使用相同标签
-          docker buildx build --platform linux/${{ matrix.architecture }} \
+          # 明确指定目标架构：amd64 和 arm64
+          docker buildx build --platform linux/amd64,linux/arm64 \
             -t $IMAGE_NAME:${TIME_TAG} \
             -t $IMAGE_NAME:latest \
             --push .
