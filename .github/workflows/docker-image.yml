@@ -40,17 +40,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
+      - name: Build and Push Docker image
         run: |
           # 获取当前时间年月日时分，作为自定义标签
           IMAGE_TAG="latest-$(date +'%Y%m%d%H%M')"
-          docker buildx build --platform linux/${{ matrix.architecture }} -t ${{ secrets.DOCKER_USERNAME }}/medialinker:${IMAGE_TAG} -t ${{ secrets.DOCKER_USERNAME }}/medialinker:latest --push .
 
-      - name: Push Docker image
-        run: |
-          IMAGE_TAG="latest-$(date +'%Y%m%d%H%M')"
-          docker push ${{ secrets.DOCKER_USERNAME }}/medialinker:${IMAGE_TAG}
-          docker push ${{ secrets.DOCKER_USERNAME }}/medialinker:latest
+          # 构建并推送镜像
+          docker buildx build --platform linux/${{ matrix.architecture }} \
+            -t ${{ secrets.DOCKER_USERNAME }}/medialinker:${IMAGE_TAG} \
+            -t ${{ secrets.DOCKER_USERNAME }}/medialinker:latest \
+            --push .
 
       - name: Check for repository updates
         run: |
