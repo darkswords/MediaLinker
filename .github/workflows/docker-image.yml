@@ -1,0 +1,63 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+      - '**/*.sh'
+      - '**/*.conf'
+  schedule:
+    - cron: '0 0 * * *'  # 每天午夜触发构建
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [x86_64, arm64]  # 构建两个架构的镜像
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          # 获取当前时间年月日时分，作为自定义标签
+          IMAGE_TAG="latest-$(date +'%Y%m%d%H%M')"
+          docker buildx build --platform linux/${{ matrix.architecture }} -t ${{ secrets.DOCKER_USERNAME }}/medialinker:${IMAGE_TAG} -t ${{ secrets.DOCKER_USERNAME }}/medialinker:latest --push .
+
+      - name: Push Docker image
+        run: |
+          IMAGE_TAG="latest-$(date +'%Y%m%d%H%M')"
+          docker push chen3861229/emby-external-url:${IMAGE_TAG}
+          docker push chen3861229/emby-external-url:latest
+
+      - name: Check for repository updates
+        run: |
+          git fetch --tags
+          git diff --name-only HEAD HEAD~1
+          # 仅当有更新时才进行构建
+
+      - name: Trigger new build on update
+        if: github.event.head_commit.message != 'Merge pull request' && github.event.head_commit.message != 'Automated build'
+        run: echo "Repository has been updated, building new image."
