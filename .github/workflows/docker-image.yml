@@ -49,8 +49,8 @@ jobs:
       - name: Push Docker image
         run: |
           IMAGE_TAG="latest-$(date +'%Y%m%d%H%M')"
-          docker push chen3861229/emby-external-url:${IMAGE_TAG}
-          docker push chen3861229/emby-external-url:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/medialinker:${IMAGE_TAG}
+          docker push ${{ secrets.DOCKER_USERNAME }}/medialinker:latest
 
       - name: Check for repository updates
         run: |
